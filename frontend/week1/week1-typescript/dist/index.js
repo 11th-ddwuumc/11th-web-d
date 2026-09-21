@@ -1,4 +1,11 @@
 "use strict";
+// type StudyMember = {
+//   memberId: string | number;
+//   name: string;
+//   level: number;
+//   isLeader: boolean;
+//   githubId?: string;
+// };
 const members = [
     { memberId: "1", name: "광수", level: 1, isLeader: true, githubId: "gwangsoo" },
     { memberId: 2, name: "지수", level: 2, isLeader: false },
@@ -21,3 +28,9 @@ function getMemberInfo(memberId) {
 console.log(getMemberInfo(1));
 console.log(getMemberInfo(2));
 console.log(getMemberInfo(999));
+const studyHour = 0;
+console.log(studyHour || 1); // 1
+console.log(studyHour ?? 1); // 0
+const studyHour2 = undefined;
+console.log(studyHour2 || 1); // 1
+console.log(studyHour2 ?? 1); // 0
