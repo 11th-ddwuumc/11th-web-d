@@ -1,0 +1,94 @@
+.header {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  padding-left: 88px;
+  padding-right: 88px;
+  padding-top: 8px;
+  width: 100%;
+  font-weight: bold;
+  background-color: #fff;
+
+  position: fixed;
+  top: 0;
+  z-index: 10;
+}
+
+.header .logo {
+  align-self: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 20%;
+  border: 3px solid black;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header .header-icon {
+  width: 24px;
+  height: 24px;
+}
+
+.header .header-title {
+  font-size: 24px;
+  color: #111;
+}
+
+.header .header-menu {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+  margin-left: 32px;
+}
+
+.header .header-menu-item {
+  cursor: pointer;
+  font-size: 16px;
+  color: #555;
+  border-bottom: 2px solid transparent;
+}
+
+.header .header-menu-item.active {
+  color: #000;
+  border-bottom-color: #000;
+}
+
+.header .header-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header .header-actions .search-box {
+  align-self: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 20%;
+  border: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header .header-actions .header-search-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+}
+
+.header .header-actions .header-login-button {
+  height: 32px;
+  padding: 0 16px;
+  border: none;
+  outline: none;
+  appearance: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 8px;
+  background-color: #2563eb;
+  color: white;
+  cursor: pointer;
+}
