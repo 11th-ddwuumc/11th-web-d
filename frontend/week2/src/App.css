@@ -1,0 +1,14 @@
+.main {
+  flex: 1;
+  padding-top: 60px;
+  padding-left: 88px;
+  padding-right: 88px;
+  background-color: #f8f9fa;
+}
+
+@media (max-width: 480px) {
+  .main {
+    padding-left: 60px;
+    padding-right: 60px;
+  }
+}
