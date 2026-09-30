@@ -1,5 +1,5 @@
-import type { Movie } from "../types/movie";
-import "./movie-grid.css";
+import type { Movie } from "../../types/movie";
+import "../movie-grid.css";
 import MovieCard from "./movie-card";
 
 interface MovieGridProps {
@@ -9,7 +9,8 @@ interface MovieGridProps {
 
 export default function MovieGrid({ movies, onToggleBookmark }: MovieGridProps) {
   return (
-    <div className="movie-grid">
+    <section className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+      {/* 영화 카드 목록 */}
       {movies.map((movie) => (
         <MovieCard
           key={movie.id}
@@ -17,6 +18,6 @@ export default function MovieGrid({ movies, onToggleBookmark }: MovieGridProps) 
           onToggleBookmark={onToggleBookmark}
         />
       ))}
-    </div>
+      </section>
   );
 }
