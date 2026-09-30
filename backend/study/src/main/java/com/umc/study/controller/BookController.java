@@ -3,11 +3,7 @@ package com.umc.study.controller;
 
 import com.umc.study.service.BookService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 
 import java.util.List;
@@ -33,4 +29,13 @@ public class BookController {
         bookService.createBook(body);
         return "도서 등록이 완료되었습니다!";
     }
+
+    // GET /books/category/1
+    @GetMapping("/category/{categoryId}")
+    public List<Map<String, Object>> getBooksByCategory(
+            @PathVariable("categoryId") Long categoryId
+    ) {
+        return bookService.getBooksByCategory(categoryId);
+    }
+
 }

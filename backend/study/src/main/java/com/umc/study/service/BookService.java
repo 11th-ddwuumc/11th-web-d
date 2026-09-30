@@ -24,4 +24,9 @@ public class BookService {
     public void createBook(Map<String, Object> body){
         bookRepository.save(body);
     }
+
+    public List<Map<String, Object>> getBooksByCategory(Long categoryId) {
+        return bookRepository.findByCategoryId(categoryId);
+    }
+
 }
