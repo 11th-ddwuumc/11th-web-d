@@ -1,7 +1,11 @@
 package com.umc.study.controller;
 
+import com.umc.study.dto.request.CreateBookReqDto;
+import com.umc.study.dto.response.BookResDto;
 import com.umc.study.service.BookService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -14,8 +18,8 @@ public class BookController {
     private final BookService bookService;
 
     @GetMapping("/books")
-    public List<Map<String, Object>> getBooks() {
-        return bookService.getAllBooks();
+    public List<BookResDto> getBooks() {
+        return bookService.getBooks();
     }
 
     @GetMapping("/books/category/{categoryId}")
@@ -26,11 +30,11 @@ public class BookController {
     }
 
     @PostMapping("/books")
-    public String createBook(
-            @RequestBody Map<String, Object> body
-    ){
-        bookService.createBook(body);
-        return "도서 등록이 완료되었습니다!";
+    @ResponseStatus(HttpStatus.CREATED)
+    public BookResDto createBook(
+            @Valid @RequestBody CreateBookReqDto request
+            ){
+        return bookService.createBook(request);
     }
 
     @PostMapping("/rentals")
