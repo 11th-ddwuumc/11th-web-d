@@ -1,3 +1,4 @@
+/** UMCine 로고, 메뉴 링크, 검색 및 로그인 버튼의 화면을 렌더링합니다. */
 export default function Header() {
   return (
     <header className="header">

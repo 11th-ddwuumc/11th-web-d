@@ -5,6 +5,7 @@ interface MovieCardProps {
   onToggleBookmark: (movieId: number) => void;
 }
 
+/** 영화 정보와 북마크 상태를 표시하고 클릭 시 영화 ID로 변경을 요청합니다. */
 export default function MovieCard({ movie, onToggleBookmark }: MovieCardProps) {
   const bookmarkIcon = movie.isBookmarked
     ? "/icons/bookmark.svg"
