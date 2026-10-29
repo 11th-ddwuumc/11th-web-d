@@ -1,22 +1,87 @@
 import { Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Route } from "../../routes/movies/$movieId";
-import { movies } from "../../data/movies";
+import { getMovieDetail } from "../../api/movies/get-movie-detail";
+import type { TmdbMovieDetail } from "../../api/movies/models";
+import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
 import { cn } from "../../utils/cn";
 import { useBookmarkStore } from "../../stores/bookmark-store";
+
+const IMAGE_BASE_URL = "https://image.tmdb.org/t/p";
+
+function formatRuntime(runtime: number | null) {
+  if (runtime === null) return "상영 시간 정보가 없어요.";
+
+  const hours = Math.floor(runtime / 60);
+  const minutes = runtime % 60;
+
+  if (hours === 0) return `${minutes}분`;
+  if (minutes === 0) return `${hours}시간`;
+  return `${hours}시간 ${minutes}분`;
+}
 
 export function MovieDetailPage() {
   const { movieId } = Route.useParams();
 
-  const movie = movies.find(
-    (movie) => movie.id === Number(movieId),
-  );
+  const parsedMovieId = Number(movieId);
+  const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
 
-  if (!movie) {
+  const [movie, setMovie] = useState<TmdbMovieDetail | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    // 유효하지 않은 번호는 요청하지 않고, 데이터를 비우고 로딩을 끝내요.
+    if (!isValidMovieId) {
+      setMovie(null);
+      setErrorMessage(null);
+      setIsLoading(false);
+      return;
+    }
+
+    let ignore = false;
+
+    setMovie(null);
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    getMovieDetail(parsedMovieId)
+      .then((response) => {
+        if (!ignore) setMovie(response);
+      })
+      .catch((error: unknown) => {
+        if (!ignore) setErrorMessage(getMovieDetailErrorMessage(error));
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [isValidMovieId, parsedMovieId]);
+
+  if (!isValidMovieId) {
+    return (
+      <main className="min-h-[60vh] bg-[#F5F6F8] px-4 py-16 text-center">
+        <h1 className="text-xl font-bold">올바르지 않은 영화 번호예요.</h1>
+      </main>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <main className="min-h-[60vh] bg-[#F5F6F8] px-4 py-16 text-center">
+        <p className="text-[#687182]">불러오는 중...</p>
+      </main>
+    );
+  }
+
+  if (errorMessage || !movie) {
     return (
       <main className="min-h-[60vh] bg-[#F5F6F8] px-4 py-16 text-center">
         <h1 className="text-xl font-bold">
-          영화를 찾을 수 없어요.
+          {errorMessage ?? "영화를 찾을 수 없어요."}
         </h1>
       </main>
     );
@@ -27,7 +92,7 @@ export function MovieDetailPage() {
 }
 
 type MovieDetailContentProps = {
-  movie: (typeof movies)[number];
+  movie: TmdbMovieDetail;
 };
 
 function MovieDetailContent({ movie }: MovieDetailContentProps) {
@@ -38,6 +103,22 @@ function MovieDetailContent({ movie }: MovieDetailContentProps) {
   const [rating, setRating] = useState(0);
   const [memo, setMemo] = useState("");
   const [saveMessage, setSaveMessage] = useState("");
+
+  const backdropUrl = movie.backdrop_path
+    ? `${IMAGE_BASE_URL}/w1280${movie.backdrop_path}`
+    : undefined;
+  const posterUrl = movie.poster_path
+    ? `${IMAGE_BASE_URL}/w500${movie.poster_path}`
+    : undefined;
+
+  // 값이 없는 항목은 빼고 " · "로 이어 붙여요.
+  const metaText = [
+    movie.release_date,
+    movie.genres.map((genre) => genre.name).join(", "),
+    formatRuntime(movie.runtime),
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   function handleSaveRating() {
     if (rating === 0) {
@@ -54,11 +135,13 @@ function MovieDetailContent({ movie }: MovieDetailContentProps) {
     <main className="flex min-h-[calc(100vh-80px)] flex-col bg-[#F5F6F8] font-['Pretendard',sans-serif] text-[#17191E]">
       {/* 배경 이미지 */}
       <section className="relative isolate overflow-hidden bg-[#17191E]">
-        <img
-          className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
-          src={movie.backdropPath}
-          alt={`${movie.title} 배경`}
-        />
+        {backdropUrl && (
+          <img
+            className="absolute inset-0 -z-20 h-full w-full object-cover object-center"
+            src={backdropUrl}
+            alt={`${movie.title} 배경`}
+          />
+        )}
 
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-black/70 via-black/25 to-transparent" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/50 to-transparent" />
@@ -78,15 +161,11 @@ function MovieDetailContent({ movie }: MovieDetailContentProps) {
             </h1>
 
             <p className="mt-2 text-sm text-white/90">
-              {movie.originalTitle}
+              {movie.original_title}
             </p>
 
             <p className="mt-2 text-xs font-semibold text-white/90">
-              {movie.releaseDate}
-              {" · "}
-              {movie.genres.join(" · ")}
-              {" · "}
-              {movie.runtime}
+              {metaText}
             </p>
           </div>
         </div>
@@ -95,11 +174,13 @@ function MovieDetailContent({ movie }: MovieDetailContentProps) {
       {/* 포스터 / 줄거리 / 내 평점 */}
       <section className="mx-auto grid w-full max-w-[1280px] flex-1 grid-cols-1 gap-6 px-4 py-6 sm:px-8 md:grid-cols-[180px_minmax(0,1fr)] lg:grid-cols-[180px_minmax(0,1fr)_320px] lg:px-20">
         <div>
-          <img
-            className="w-[180px] max-w-full rounded-[10px] shadow-lg"
-            src={movie.posterPath}
-            alt={`${movie.title} 포스터`}
-          />
+          {posterUrl && (
+            <img
+              className="w-[180px] max-w-full rounded-[10px] shadow-lg"
+              src={posterUrl}
+              alt={`${movie.title} 포스터`}
+            />
+          )}
         </div>
 
         <div className="min-w-0">
@@ -120,7 +201,8 @@ function MovieDetailContent({ movie }: MovieDetailContentProps) {
             )}
             type="button"
             aria-pressed={isBookmarked}
-            onClick={() => toggleBookmark(movie.id)}          >
+            onClick={() => toggleBookmark(movie.id)}
+          >
             <svg
               className="h-4 w-4"
               viewBox="0 0 24 24"
@@ -139,10 +221,7 @@ function MovieDetailContent({ movie }: MovieDetailContentProps) {
           className="min-w-0 md:col-span-2 lg:col-span-1 lg:self-start lg:border-l lg:border-[#E2E5EA] lg:pl-7"
           aria-labelledby="my-rating-title"
         >
-          <h2
-            id="my-rating-title"
-            className="text-lg font-extrabold"
-          >
+          <h2 id="my-rating-title" className="text-lg font-extrabold">
             내 평점
           </h2>
 
@@ -150,11 +229,7 @@ function MovieDetailContent({ movie }: MovieDetailContentProps) {
             별점을 줄 수, 후기는 선택이에요.
           </p>
 
-          <div
-            className="mt-3 flex gap-2"
-            role="group"
-            aria-label="별점 선택"
-          >
+          <div className="mt-3 flex gap-2" role="group" aria-label="별점 선택">
             {[1, 2, 3, 4, 5].map((score) => (
               <button
                 key={score}
@@ -196,10 +271,7 @@ function MovieDetailContent({ movie }: MovieDetailContentProps) {
             평점 저장
           </button>
 
-          <p
-            className="mt-2 text-xs text-[#687182]"
-            role="status"
-          >
+          <p className="mt-2 text-xs text-[#687182]" role="status">
             {saveMessage}
           </p>
         </section>
@@ -208,8 +280,7 @@ function MovieDetailContent({ movie }: MovieDetailContentProps) {
       {/* 하단 안내 */}
       <footer className="mt-16 border-t border-[#E2E5EA] bg-white">
         <div className="mx-auto max-w-[1280px] px-4 py-5 text-right text-[10px] text-[#687182] sm:px-8 lg:px-20">
-          This product uses the TMDB API but is not endorsed or certified
-          by{" "}
+          This product uses the TMDB API but is not endorsed or certified by{" "}
           <a
             className="text-inherit underline"
             href="https://www.themoviedb.org/"

@@ -1,7 +1,8 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState, type FormEvent } from "react";
 import { Route } from "../../routes/search";
-import { movies } from "../../data/movies";
+import { searchMovies } from "../../api/movies/search-movies";
+import type { TmdbMovieListItem } from "../../api/movies/models";
 import { cn } from "../../utils/cn";
 import { BookmarkButton } from "../../components/bookmark-button";
 
@@ -10,21 +11,45 @@ export function SearchPage() {
   const navigate = useNavigate({ from: "/search" });
 
   const [searchText, setSearchText] = useState(query ?? "");
+  const [movies, setMovies] = useState<TmdbMovieListItem[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     setSearchText(query ?? "");
   }, [query]);
 
-  const normalizedQuery = query?.trim().toLowerCase() ?? "";
+  const normalizedQuery = (query ?? "").trim();
   const hasQuery = normalizedQuery.length > 0;
 
-  const searchResults = hasQuery
-    ? movies.filter(
-        (movie) =>
-          movie.title.toLowerCase().includes(normalizedQuery) ||
-          movie.originalTitle.toLowerCase().includes(normalizedQuery),
-      )
-    : [];
+  useEffect(() => {
+    let ignore = false;
+
+    setMovies([]);
+    setErrorMessage(null);
+
+    if (!normalizedQuery) {
+      setIsLoading(false);
+      return;
+    }
+
+    setIsLoading(true);
+
+    searchMovies({ query: normalizedQuery })
+      .then((response) => {
+        if (!ignore) setMovies(response.results);
+      })
+      .catch(() => {
+        if (!ignore) setErrorMessage("검색 결과를 불러오지 못했어요.");
+      })
+      .finally(() => {
+        if (!ignore) setIsLoading(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [normalizedQuery]);
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -105,21 +130,23 @@ export function SearchPage() {
                 id="search-results-title"
                 className="break-words text-sm font-bold"
               >
-                '{query?.trim()}' 검색 결과
+                '{normalizedQuery}' 검색 결과
               </h2>
 
-              <p className="text-xs text-[#687182]">
-                영화 {searchResults.length}편
-              </p>
+              <p className="text-xs text-[#687182]">영화 {movies.length}편</p>
             </div>
 
-            {searchResults.length === 0 ? (
+            {isLoading ? (
+              <p className="py-16 text-center text-[#687182]">검색 중...</p>
+            ) : errorMessage ? (
+              <p className="py-16 text-center text-[#687182]">{errorMessage}</p>
+            ) : movies.length === 0 ? (
               <p className="py-16 text-center text-[#687182]">
                 검색 결과가 없어요.
               </p>
             ) : (
               <ul className="m-0 grid list-none grid-cols-1 gap-x-8 p-0 lg:grid-cols-2">
-                {searchResults.map((movie) => (
+                {movies.map((movie) => (
                   <li
                     key={movie.id}
                     className="flex min-w-0 gap-4 border-b border-[#E2E5EA] py-5"
@@ -132,7 +159,11 @@ export function SearchPage() {
                     >
                       <img
                         className="h-[150px] w-[100px] rounded-lg object-cover sm:h-[180px] sm:w-[120px]"
-                        src={movie.posterPath}
+                        src={
+                          movie.poster_path
+                            ? `https://image.tmdb.org/t/p/w500${movie.poster_path}`
+                            : undefined
+                        }
                         alt={`${movie.title} 포스터`}
                         loading="lazy"
                       />
@@ -150,8 +181,8 @@ export function SearchPage() {
                       </h3>
 
                       <div className="mt-2 flex flex-wrap gap-x-2 gap-y-1 text-xs text-[#687182]">
-                        <p>{movie.originalTitle}</p>
-                        <p>{movie.releaseDate}</p>
+                        <p>{movie.original_title}</p>
+                        <p>{movie.release_date}</p>
                       </div>
 
                       <p className="mt-3 break-words text-xs leading-relaxed text-[#687182]">
