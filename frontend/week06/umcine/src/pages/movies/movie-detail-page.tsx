@@ -29,6 +29,7 @@ export function MovieDetailPage() {
     queryKey: ["movies", "detail", movieId],
     queryFn: () => getMovieDetail(movieId),
     enabled: isValidMovieId,
+    staleTime: 30 * 1000,
   });
 
   // 유효하지 않은 번호는 요청하지 않아요. (enabled: false면 isPending이 true라서 가장 먼저 확인해요.)
