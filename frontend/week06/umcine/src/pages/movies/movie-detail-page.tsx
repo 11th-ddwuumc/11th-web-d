@@ -1,6 +1,6 @@
-import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
-import { Route } from "../../routes/movies/$movieId";
+import { Link, useParams } from "@tanstack/react-router";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { getMovieDetail } from "../../api/movies/get-movie-detail";
 import type { TmdbMovieDetail } from "../../api/movies/models";
 import { getMovieDetailErrorMessage } from "../../utils/movies/get-movie-detail-error-message";
@@ -21,46 +21,17 @@ function formatRuntime(runtime: number | null) {
 }
 
 export function MovieDetailPage() {
-  const { movieId } = Route.useParams();
+  const { movieId: movieIdParam } = useParams({ from: "/movies/$movieId" });
+  const movieId = Number(movieIdParam);
+  const isValidMovieId = Number.isInteger(movieId) && movieId > 0;
 
-  const parsedMovieId = Number(movieId);
-  const isValidMovieId = Number.isInteger(parsedMovieId) && parsedMovieId > 0;
+  const movieDetailQuery = useQuery({
+    queryKey: ["movies", "detail", movieId],
+    queryFn: () => getMovieDetail(movieId),
+    enabled: isValidMovieId,
+  });
 
-  const [movie, setMovie] = useState<TmdbMovieDetail | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    // 유효하지 않은 번호는 요청하지 않고, 데이터를 비우고 로딩을 끝내요.
-    if (!isValidMovieId) {
-      setMovie(null);
-      setErrorMessage(null);
-      setIsLoading(false);
-      return;
-    }
-
-    let ignore = false;
-
-    setMovie(null);
-    setIsLoading(true);
-    setErrorMessage(null);
-
-    getMovieDetail(parsedMovieId)
-      .then((response) => {
-        if (!ignore) setMovie(response);
-      })
-      .catch((error: unknown) => {
-        if (!ignore) setErrorMessage(getMovieDetailErrorMessage(error));
-      })
-      .finally(() => {
-        if (!ignore) setIsLoading(false);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [isValidMovieId, parsedMovieId]);
-
+  // 유효하지 않은 번호는 요청하지 않아요. (enabled: false면 isPending이 true라서 가장 먼저 확인해요.)
   if (!isValidMovieId) {
     return (
       <main className="min-h-[60vh] bg-[#F5F6F8] px-4 py-16 text-center">
@@ -69,7 +40,7 @@ export function MovieDetailPage() {
     );
   }
 
-  if (isLoading) {
+  if (movieDetailQuery.isPending) {
     return (
       <main className="min-h-[60vh] bg-[#F5F6F8] px-4 py-16 text-center">
         <p className="text-[#687182]">불러오는 중...</p>
@@ -77,18 +48,23 @@ export function MovieDetailPage() {
     );
   }
 
-  if (errorMessage || !movie) {
+  if (movieDetailQuery.isError) {
     return (
       <main className="min-h-[60vh] bg-[#F5F6F8] px-4 py-16 text-center">
         <h1 className="text-xl font-bold">
-          {errorMessage ?? "영화를 찾을 수 없어요."}
+          {getMovieDetailErrorMessage(movieDetailQuery.error)}
         </h1>
       </main>
     );
   }
 
   // 영화가 바뀌면 즐겨찾기·평점 입력 상태도 새로 시작합니다.
-  return <MovieDetailContent key={movie.id} movie={movie} />;
+  return (
+    <MovieDetailContent
+      key={movieDetailQuery.data.id}
+      movie={movieDetailQuery.data}
+    />
+  );
 }
 
 type MovieDetailContentProps = {
