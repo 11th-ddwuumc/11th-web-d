@@ -6,7 +6,7 @@ export default function Header() {
     const navigate = useNavigate();
 
     function handleLoginClick() {
-        navigate({ to: "/signup" });
+        navigate({ to: "/login" });
     }
   return (
     <header className="flex items-baseline gap-1 sm:gap-2 px-4 sm:px-6 md:px-10 lg:px-[88px] pt-3 pb-3 w-full font-bold bg-white fixed top-0 z-10">
@@ -39,9 +39,9 @@ export default function Header() {
                     );
                 }
                 return (
-                    <p key={item} className={menuClassName}>
+                    <Link key={item} to="/profile" className={menuClassName}>
                         {item}
-                    </p>
+                    </Link>
                 );
             })}
         </div>
