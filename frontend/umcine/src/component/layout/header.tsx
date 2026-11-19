@@ -1,13 +1,20 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { getMe } from "../../api/members/me";
+import { useAuthStore } from "../../stores/auth-store";
 
 const MENU_ITEMS = ["영화", "검색", "내 정보"];
 
 export default function Header() {
-    const navigate = useNavigate();
+    const accessToken = useAuthStore((state) => state.accessToken);
+    const meQuery = useQuery({
+        queryKey: ["members", "me"],
+        queryFn: getMe,
+        enabled: Boolean(accessToken),
+        staleTime: 5 * 60 * 1000,
+        retry: false,
+    });
 
-    function handleLoginClick() {
-        navigate({ to: "/login" });
-    }
   return (
     <header className="flex items-baseline gap-1 sm:gap-2 px-4 sm:px-6 md:px-10 lg:px-[88px] pt-3 pb-3 w-full font-bold bg-white fixed top-0 z-10">
         <div className="self-center w-7 h-7 sm:w-8 sm:h-8 rounded-[20%] border-[3px] border-black flex items-center justify-center shrink-0">
@@ -50,15 +57,23 @@ export default function Header() {
             <div className="self-center w-7 h-7 sm:w-8 sm:h-8 rounded-[20%] border border-[#ddd] flex items-center justify-center shrink-0">
                 <img className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" src="/icons/movie-icons/search.svg" alt="검색 아이콘" />
             </div>
-            <button 
-                className="h-7 sm:h-8 px-2.5 sm:px-4 text-xs sm:text-sm font-semibold 
-                rounded-lg bg-blue-600 text-white cursor-pointer whitespace-nowrap shrink-0"
-                onClick={() => {
-                    handleLoginClick();
-                }}
-            >
+            {!accessToken ? (
+                <Link
+                    to="/login"
+                    className="h-7 sm:h-8 px-2.5 sm:px-4 inline-flex items-center text-xs sm:text-sm font-semibold rounded-lg bg-blue-600 text-white cursor-pointer whitespace-nowrap shrink-0"
+                >
                     로그인
-            </button>
+                </Link>
+            ) : meQuery.isLoading ? (
+                <span className="h-7 sm:h-8 w-20 animate-pulse rounded-lg bg-gray-200" />
+            ) : (
+                <Link
+                    to="/profile"
+                    className="h-7 sm:h-8 px-2.5 sm:px-4 inline-flex items-center text-xs sm:text-sm font-semibold rounded-lg bg-blue-600 text-white cursor-pointer whitespace-nowrap shrink-0"
+                >
+                    마이페이지
+                </Link>
+            )}
         </div>
     </header>
     );

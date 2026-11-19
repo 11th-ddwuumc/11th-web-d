@@ -1,10 +1,10 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
 import { useBookmarkStore } from "../../stores/bookmark-store";
 import { movieQueries } from "../../api/movies/movie-queries";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 import MovieDetailSkeleton from "../../component/movies/movie-detail-skeleton";
+import RatingSection from "../../component/movies/rating-section";
 import Footer from "../../component/layout/footer";
 
 export function MovieDetailPage() {
@@ -18,19 +18,10 @@ export function MovieDetailPage() {
   const toggleBookmark = useBookmarkStore(
     (state) => state.toggleBookmark,
   );
-  const [rating, setRating] = useState(0);
-  const [hoverRating, setHoverRating] = useState(0);
-  const [review, setReview] = useState("");
-  const [isSaved, setIsSaved] = useState(false);
-
   const movieDetailQuery = useQuery({
     ...movieQueries.detail(movieId),
     enabled: isValidMovieId,
   });
-
-  function handleSaveRating() {
-    setIsSaved(true);
-  }
 
   function runtimeToHoursAndMinutes(runtime: number) {
     const hours = Math.floor(runtime / 60);
@@ -115,56 +106,7 @@ export function MovieDetailPage() {
           </div>
         </div>
 
-        <div className="w-full lg:w-[280px] lg:shrink-0">
-          <h2 className="mb-1 text-lg font-bold text-[#111]">내 평점</h2>
-          <p className="mb-3 text-xs text-gray-400">별점은 필수, 후기는 선택이에요.</p>
-          <div className="mb-4 flex gap-1">
-            {[1, 2, 3, 4, 5].map((star) => (
-              <button
-                key={star}
-                type="button"
-                aria-label={`${star}점`}
-                onClick={() => {
-                  setRating(star);
-                  setIsSaved(false);
-                }}
-                onMouseEnter={() => setHoverRating(star)}
-                onMouseLeave={() => setHoverRating(0)}
-                className="hover:cursor-pointer"
-              >
-                <img
-                  src={
-                    star <= (hoverRating || rating)
-                      ? "/icons/movie-icons/star.svg"
-                      : "/icons/movie-icons/star-outline.svg"
-                  }
-                  alt=""
-                  className="h-6 w-6"
-                />
-              </button>
-            ))}
-          </div>
-          <textarea
-            value={review}
-            onChange={(event) => {
-              setReview(event.target.value);
-              setIsSaved(false);
-            }}
-            placeholder="영화를 보고 느낀 점을 남겨주세요."
-            className="mb-4 h-24 w-full resize-none rounded-lg border border-gray-200 p-3 text-sm text-[#111] placeholder:text-gray-400 focus:border-black focus:outline-none"
-          />
-          <button
-            type="button"
-            onClick={handleSaveRating}
-            disabled={rating === 0}
-            className="w-full rounded-lg bg-black py-2.5 text-sm font-semibold text-white hover:cursor-pointer hover:bg-gray-700 disabled:cursor-not-allowed disabled:bg-gray-300"
-          >
-            평점 저장
-          </button>
-          {isSaved && (
-            <p className="mt-2 text-center text-xs text-gray-400">평점이 저장되었어요.</p>
-          )}
-        </div>
+        <RatingSection movieId={movieId} />
       </div>
       <Footer />
     </div>

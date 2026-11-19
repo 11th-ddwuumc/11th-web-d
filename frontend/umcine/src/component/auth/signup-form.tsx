@@ -1,8 +1,8 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import FormField from "./form-field";
 import { checkEmail } from "../../api/auth/check-email";
 import { checkNickname } from "../../api/auth/check-nickname";
-import { signup } from "../../api/auth/signup";
+import { useSignupMutation } from "../../hooks/use-signup-mutation";
 
 // 이메일 형식 검사
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -21,7 +21,6 @@ type FormKey = keyof typeof DEFAULT_FORM;
 
 export default function SignupForm() {
   const [form, setForm] = useState(DEFAULT_FORM);
-  const [isSubmitting, setIsSubmitting] = useState(false);
   // const navigate = useNavigate();
 
   // 입력값의 유효성 검사
@@ -59,27 +58,19 @@ export default function SignupForm() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    // 폼 제출 시 페이지 새로고침 방지
-    e.preventDefault();
-    if (!canSubmit || isSubmitting) return;
+  const signupMutation = useSignupMutation();
 
-    setIsSubmitting(true);
-    try {
-      const response = await signup({
-        email: form.email.trim(),
-        nickname: form.nickname.trim(),
-        password: form.password,
-      });
-      alert(response.message);
-      // 로그인 페이지 연결 후 주석 해제
-      // navigate({ to: "/login" });
-    } catch {
-      alert("회원가입에 실패했어요. 다시 시도해 주세요.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+const handleSubmit = (event: React.SubmitEvent<HTMLFormElement>) => {
+  event.preventDefault();
+  
+  if (!canSubmit || signupMutation.isPending) return;
+  
+  signupMutation.mutate({
+    email: form.email.trim(),
+    nickname: form.nickname.trim(),
+    password: form.password,
+  });
+};
 
   const handleCheckEmail = async () => {
     try {
@@ -160,10 +151,10 @@ export default function SignupForm() {
       />
       <button
         type="submit"
-        disabled={!canSubmit || isSubmitting}
+        disabled={!canSubmit || signupMutation.isPending}
         className="h-11 mt-1 rounded-lg bg-blue-600 text-sm font-bold text-white cursor-pointer disabled:bg-[#bbb] disabled:cursor-not-allowed"
       >
-        {isSubmitting ? "가입 중..." : "가입하기"}
+        {signupMutation.isPending ? "가입 중..." : "가입하기"}
       </button>
     </form>
   );

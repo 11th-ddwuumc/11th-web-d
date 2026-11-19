@@ -1,22 +1,29 @@
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { checkNickname } from "../../api/auth/check-nickname";
+import { getMe } from "../../api/members/me";
+import { useUpdateMeMutation } from "../../hooks/use-update-me-mutation";
+import { useAuthStore } from "../../stores/auth-store";
 import WithdrawSection from "./withdraw-section";
-
-// TODO: 내 정보 조회 API 연동 후 초기값 교체
-const INITIAL_PROFILE = {
-  nickname: "",
-  email: "",
-};
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function ProfileEditForm() {
-  const navigate = useNavigate();
-  const [nickname, setNickname] = useState(INITIAL_PROFILE.nickname);
+  const accessToken = useAuthStore((state) => state.accessToken);
+  const meQuery = useQuery({
+    queryKey: ["members", "me"],
+    queryFn: getMe,
+    enabled: Boolean(accessToken),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  // 사용자가 입력하기 전에는 조회한 닉네임을 보여 줌
+  const [nicknameInput, setNicknameInput] = useState<string | null>(null);
+  const nickname = nicknameInput ?? meQuery.data?.nickname ?? "";
   const [imagePreview, setImagePreview] = useState<string | null>(null);
-  const [isSaving, setIsSaving] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const updateMeMutation = useUpdateMeMutation();
 
   const nicknameLength = nickname.trim().length;
   const isNicknameValid = nicknameLength >= 2 && nicknameLength <= 12;
@@ -46,20 +53,11 @@ export default function ProfileEditForm() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!isNicknameValid || isSaving) return;
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!isNicknameValid || updateMeMutation.isPending) return;
 
-    setIsSaving(true);
-    try {
-      // TODO: 내 정보 수정 API 연동
-      alert("변경사항이 저장되었습니다.");
-      navigate({ to: "/profile" });
-    } catch {
-      alert("저장에 실패했어요. 다시 시도해 주세요.");
-    } finally {
-      setIsSaving(false);
-    }
+    updateMeMutation.mutate({ nickname: nickname.trim() });
   };
 
   return (
@@ -79,10 +77,10 @@ export default function ProfileEditForm() {
         </div>
         <button
           type="submit"
-          disabled={!isNicknameValid || isSaving}
+          disabled={!isNicknameValid || updateMeMutation.isPending}
           className="h-9 px-4 rounded-lg bg-blue-600 text-xs font-bold text-white cursor-pointer disabled:bg-[#bbb] disabled:cursor-not-allowed shrink-0"
         >
-          {isSaving ? "저장 중..." : "변경사항 저장"}
+          {updateMeMutation.isPending ? "저장 중..." : "변경사항 저장"}
         </button>
       </div>
 
@@ -139,7 +137,7 @@ export default function ProfileEditForm() {
                 type="text"
                 maxLength={12}
                 value={nickname}
-                onChange={(e) => setNickname(e.target.value)}
+                onChange={(e) => setNicknameInput(e.target.value)}
                 className="flex-1 min-w-0 text-sm text-[#111] outline-none bg-transparent"
               />
               <button
@@ -162,7 +160,7 @@ export default function ProfileEditForm() {
             <input
               id="email"
               type="email"
-              value={INITIAL_PROFILE.email}
+              value={meQuery.data?.email ?? ""}
               readOnly
               className="h-11 px-3 rounded-lg border border-[#e5e7eb] bg-white text-sm text-[#777] outline-none"
             />

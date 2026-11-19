@@ -5,14 +5,13 @@ export interface LoginRequest {
   password: string;
 }
 
-// TODO: 실제 명세에 맞게 엔드포인트와 응답 필드 확인 필요
 export interface LoginResponse {
   isSuccess: boolean;
   code: string;
   message: string;
   result: {
+    nickname: string;
     accessToken: string;
-    refreshToken?: string;
   };
 }
 

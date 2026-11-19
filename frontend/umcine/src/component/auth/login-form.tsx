@@ -1,7 +1,6 @@
 import { useState, type FormEvent } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import FormField from "./form-field";
-import { login } from "../../api/auth/login";
+import { useLoginMutation } from "../../hooks/use-login-mutation";
 
 // 이메일 형식 검사
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -14,13 +13,10 @@ const DEFAULT_FORM = {
 type FormKey = keyof typeof DEFAULT_FORM;
 
 export default function LoginForm() {
-  const navigate = useNavigate();
   const [form, setForm] = useState(DEFAULT_FORM);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
   const isEmailValid = EMAIL_REGEX.test(form.email.trim());
-  const isPasswordValid = form.password.length > 0;
-  const canSubmit = isEmailValid && isPasswordValid;
+  const loginMutation = useLoginMutation();
+  const canSubmit = isEmailValid && form.password.length > 0;
 
   // 입력을 시작한 필드에만 오류 표시
   const emailError =
@@ -30,24 +26,14 @@ export default function LoginForm() {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!canSubmit || isSubmitting) return;
+    if (!canSubmit || loginMutation.isPending) return;
 
-    setIsSubmitting(true);
-    try {
-      const response = await login({
-        email: form.email.trim(),
-        password: form.password,
-      });
-      // TODO: 토큰 저장 방식 결정 후 처리 (response.result.accessToken)
-      console.log(response);
-      navigate({ to: "/" });
-    } catch {
-      alert("로그인에 실패했어요. 이메일과 비밀번호를 확인해 주세요.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    loginMutation.mutate({
+      email: form.email.trim(),
+      password: form.password,
+    });
   };
 
   return (
@@ -71,10 +57,10 @@ export default function LoginForm() {
       />
       <button
         type="submit"
-        disabled={!canSubmit || isSubmitting}
+        disabled={!canSubmit || loginMutation.isPending}
         className="h-11 mt-1 rounded-lg bg-blue-600 text-sm font-bold text-white cursor-pointer disabled:bg-[#bbb] disabled:cursor-not-allowed"
       >
-        {isSubmitting ? "로그인 중..." : "로그인"}
+        {loginMutation.isPending ? "로그인 중..." : "로그인"}
       </button>
     </form>
   );

@@ -1,22 +1,30 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
+import { useMeQuery } from "../../hooks/use-me-query";
+import { ratingQueries } from "../../api/movies/ratings/rating-queries";
 import { movieQueries } from "../../api/movies/movie-queries";
 import type { TmdbMovieListItem } from "../../api/movies/models";
 import { useBookmarkStore } from "../../stores/bookmark-store";
 import MovieCard from "../../component/movies/movie-card";
 import Pagination from "../../component/movies/pagination";
 
-// TODO: 내 정보 조회 API 연동 후 교체
-const PROFILE = {
-  nickname: "",
-  email: "",
-  profileImageUrl: null as string | null,
-};
+// TODO: 프로필 이미지 API 연동 후 교체
+const PROFILE_IMAGE_URL = null as string | null;
 
 const FAVORITES_PAGE_SIZE = 12;
 
 export default function ProfilePage() {
+  const meQuery = useMeQuery();
+  const memberId = meQuery.data?.memberId;
+  const ratingsQuery = useQuery({
+    ...ratingQueries.memberList(memberId ?? 0),
+    enabled: memberId !== undefined,
+  });
+  const ratings = ratingsQuery.data ?? [];
+  const ratedMovies = useQueries({
+    queries: ratings.map((rating) => movieQueries.detail(rating.movieId)),
+  });
   const [page, setPage] = useState(1);
   const bookmarkedMovieIds = useBookmarkStore(
     (state) => state.bookmarkedMovieIds,
@@ -57,9 +65,9 @@ export default function ProfilePage() {
         <h3 className="text-sm font-bold text-[#111] mb-4">기본 정보</h3>
         <div className="flex items-center gap-6">
           <div className="w-16 h-16 rounded-full bg-[#e5e7eb] flex items-center justify-center overflow-hidden shrink-0">
-            {PROFILE.profileImageUrl ? (
+            {PROFILE_IMAGE_URL ? (
               <img
-                src={PROFILE.profileImageUrl}
+                src={PROFILE_IMAGE_URL}
                 alt="프로필 이미지"
                 className="w-full h-full object-cover"
               />
@@ -75,17 +83,49 @@ export default function ProfilePage() {
             <div>
               <dt className="text-[10px] text-[#999]">닉네임</dt>
               <dd className="text-sm font-bold text-[#111] break-all">
-                {PROFILE.nickname}
+                {meQuery.data?.nickname}
               </dd>
             </div>
             <div>
               <dt className="text-[10px] text-[#999]">이메일</dt>
               <dd className="text-sm font-bold text-[#111] break-all">
-                {PROFILE.email}
+                {meQuery.data?.email}
               </dd>
             </div>
           </dl>
         </div>
+      </div>
+
+      <div className="py-6 border-b border-[#e5e7eb]">
+        <h3 className="text-sm font-bold text-[#111] mb-4">내 평점</h3>
+        {ratingsQuery.isPending ? (
+          <p className="text-sm text-[#777]">불러오는 중...</p>
+        ) : ratings.length === 0 ? (
+          <p className="text-sm text-[#777]">아직 남긴 평점이 없어요.</p>
+        ) : (
+          <ul className="flex flex-col gap-3">
+            {ratings.map((rating, index) => (
+              <li key={rating.ratingId} className="flex flex-col gap-1">
+                <div className="flex items-center gap-3">
+                  <Link
+                    to="/movies/$movieId"
+                    params={{ movieId: String(rating.movieId) }}
+                    className="text-sm font-bold text-[#111] hover:text-blue-600"
+                  >
+                    {ratedMovies[index]?.data?.title ?? `영화 ${rating.movieId}`}
+                  </Link>
+                  <span className="text-xs font-bold text-blue-600">
+                    {"★".repeat(rating.score)}
+                    {"☆".repeat(5 - rating.score)}
+                  </span>
+                </div>
+                {rating.comment && (
+                  <p className="text-sm text-[#555] break-all">{rating.comment}</p>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       <div className="py-6">
