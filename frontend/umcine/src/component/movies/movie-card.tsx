@@ -1,17 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { cn } from "../../utils/cn";
-import { useBookmarkStore } from "../../stores/bookmark-store";
+import { useIsFavorite, useToggleFavorite } from "../../hooks/use-favorites";
 import type { TmdbMovieListItem } from "../../api/movies/models";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 
 export default function MovieCard({ movie }: { movie: TmdbMovieListItem }) {
-    const isBookmarked = useBookmarkStore((state) =>
-        state.bookmarkedMovieIds.includes(movie.id),
-    );
-    const toggleBookmark = useBookmarkStore(
-        (state) => state.toggleBookmark,
-    );
-    
+    const isBookmarked = useIsFavorite(movie.id);
+    const { toggleFavorite, isPending } = useToggleFavorite();
+
     return (
         <div className="w-[150px]">
             <div className="relative w-full aspect-[4/5] overflow-hidden rounded-lg">
@@ -27,7 +23,8 @@ export default function MovieCard({ movie }: { movie: TmdbMovieListItem }) {
                         isBookmarked ? "bg-blue-500 border-blue-500 hover:bg-blue-600 hover:border-blue-600" 
                             : "bg-gray-800 border-white  hover:bg-blue-200 hover:border-blue-200",
                     )}
-                    onClick={() => toggleBookmark(movie.id)}
+                    disabled={isPending}
+                    onClick={() => toggleFavorite(movie.id, isBookmarked)}
                 >
                     <img
                         className="w-full h-full object-contain p-[2px]"

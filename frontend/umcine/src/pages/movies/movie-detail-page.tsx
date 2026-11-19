@@ -1,6 +1,6 @@
 import { Link, useParams } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useBookmarkStore } from "../../stores/bookmark-store";
+import { useFavoriteStatusQuery, useToggleFavorite } from "../../hooks/use-favorites";
 import { movieQueries } from "../../api/movies/movie-queries";
 import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
 import MovieDetailSkeleton from "../../component/movies/movie-detail-skeleton";
@@ -12,12 +12,9 @@ export function MovieDetailPage() {
   const movieId = Number(movieIdParam);
   const isValidMovieId = Number.isInteger(movieId) && movieId > 0;
 
-  const isBookmarked = useBookmarkStore((state) =>
-    state.bookmarkedMovieIds.includes(Number(movieId)),
-  );
-  const toggleBookmark = useBookmarkStore(
-    (state) => state.toggleBookmark,
-  );
+  const isBookmarked = useFavoriteStatusQuery(movieId, isValidMovieId).data ?? false;
+  const { toggleFavorite, isPending: isFavoritePending } = useToggleFavorite();
+
   const movieDetailQuery = useQuery({
     ...movieQueries.detail(movieId),
     enabled: isValidMovieId,
@@ -87,10 +84,9 @@ export function MovieDetailPage() {
             <p className="text-sm leading-relaxed text-gray-600">{movieDetailQuery.data?.overview}</p>
             <button
               type="button"
-              onClick={() => {
-                toggleBookmark(Number(movieId));
-              }}
-              className="mt-2 inline-flex w-fit items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:cursor-pointer hover:bg-blue-700"
+              disabled={isFavoritePending}
+              onClick={() => toggleFavorite(movieId, isBookmarked)}
+              className="mt-2 disabled:opacity-60 inline-flex w-fit items-center gap-1.5 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:cursor-pointer hover:bg-blue-700"
             >
               <img
                 src={

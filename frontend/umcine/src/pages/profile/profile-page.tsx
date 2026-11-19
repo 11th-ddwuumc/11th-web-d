@@ -5,7 +5,7 @@ import { useMeQuery } from "../../hooks/use-me-query";
 import { ratingQueries } from "../../api/movies/ratings/rating-queries";
 import { movieQueries } from "../../api/movies/movie-queries";
 import type { TmdbMovieListItem } from "../../api/movies/models";
-import { useBookmarkStore } from "../../stores/bookmark-store";
+import { useFavoritesQuery } from "../../hooks/use-favorites";
 import MovieCard from "../../component/movies/movie-card";
 import Pagination from "../../component/movies/pagination";
 
@@ -26,8 +26,9 @@ export default function ProfilePage() {
     queries: ratings.map((rating) => movieQueries.detail(rating.movieId)),
   });
   const [page, setPage] = useState(1);
-  const bookmarkedMovieIds = useBookmarkStore(
-    (state) => state.bookmarkedMovieIds,
+  const favoritesQuery = useFavoritesQuery();
+  const bookmarkedMovieIds = (favoritesQuery.data ?? []).map(
+    (favorite) => favorite.movieId,
   );
 
   const totalPages = Math.max(
@@ -130,7 +131,9 @@ export default function ProfilePage() {
 
       <div className="py-6">
         <h3 className="text-sm font-bold text-[#111] mb-4">내 즐겨찾기</h3>
-        {bookmarkedMovieIds.length === 0 ? (
+        {favoritesQuery.isPending ? (
+          <p className="text-sm text-[#777]">불러오는 중...</p>
+        ) : bookmarkedMovieIds.length === 0 ? (
           <p className="text-sm text-[#777]">아직 즐겨찾기한 영화가 없어요.</p>
         ) : (
           <>
