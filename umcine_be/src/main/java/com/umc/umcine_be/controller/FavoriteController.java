@@ -21,10 +21,11 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-public class FavoriteController {
+public class FavoriteController implements FavoriteControllerDoc {
 
     private final FavoriteService favoriteService;
 
+    @Override
     @PostMapping("/favorites")
     public ResponseEntity<ApiResponse<FavoriteResponse>> create(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
@@ -35,6 +36,7 @@ public class FavoriteController {
                 .body(ApiResponse.created("즐겨찾기를 등록했습니다.", response));
     }
 
+    @Override
     @GetMapping("/favorites")
     public ResponseEntity<ApiResponse<List<FavoriteResponse>>> getMyFavorites(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId
@@ -43,6 +45,7 @@ public class FavoriteController {
         return ResponseEntity.ok(ApiResponse.ok("내 즐겨찾기 목록을 조회했습니다.", response));
     }
 
+    @Override
     @GetMapping("/favorites/{movieId}")
     public ResponseEntity<ApiResponse<FavoriteStatusResponse>> getStatus(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
@@ -52,6 +55,7 @@ public class FavoriteController {
         return ResponseEntity.ok(ApiResponse.ok("즐겨찾기 여부를 조회했습니다.", response));
     }
 
+    @Override
     @DeleteMapping("/favorites/{movieId}")
     public ResponseEntity<ApiResponse<Void>> delete(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
