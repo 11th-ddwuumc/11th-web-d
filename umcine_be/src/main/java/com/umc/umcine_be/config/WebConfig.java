@@ -2,10 +2,14 @@ package com.umc.umcine_be.config;
 
 import com.umc.umcine_be.interceptor.AuthInterceptor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
@@ -13,10 +17,19 @@ public class WebConfig implements WebMvcConfigurer {
 
     private final AuthInterceptor authInterceptor;
 
+    // 운영 프론트엔드 출처. 환경변수 FRONTEND_ORIGIN으로 주입하고, 비어 있으면 허용 목록에 추가하지 않습니다.
+    @Value("${cors.frontend-origin:}")
+    private String frontendOrigin;
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
+        List<String> origins = new ArrayList<>(List.of("http://localhost:5173"));
+        if (!frontendOrigin.isBlank()) {
+            origins.add(frontendOrigin);
+        }
+
         registry.addMapping("/**") // 모든 경로에 대해
-                .allowedOrigins("http://localhost:5173") // 이 출처에서 오는 요청만 허용
+                .allowedOrigins(origins.toArray(String[]::new)) // 이 출처에서 오는 요청만 허용
                 .allowedMethods("GET", "POST", "PATCH", "DELETE")
                 .allowedHeaders("*");
     }
