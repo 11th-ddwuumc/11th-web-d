@@ -15,10 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequiredArgsConstructor
-public class MovieRecordController {
+public class MovieRecordController implements MovieRecordControllerDoc {
 
     private final MovieRecordService movieRecordService;
 
+    @Override
     @PostMapping("/movie-records")
     public ResponseEntity<ApiResponse<MovieRecordResponse>> create(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,

@@ -15,15 +15,17 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
-public class RatingController {
+public class RatingController implements RatingControllerDoc {
 
     private final RatingService ratingService;
 
+    @Override
     @GetMapping("members/{memberId}/ratings")
     public List<RatingResponse> getMemberRatings(@PathVariable Long memberId) {
         return ratingService.getRatingsByMember(memberId);
     }
 
+    @Override
     @PostMapping("/ratings")
     public ResponseEntity<ApiResponse<Long>> create(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
@@ -34,6 +36,7 @@ public class RatingController {
                 .body(ApiResponse.created("평점을 등록했습니다.", ratingId));
     }
 
+    @Override
     @PatchMapping("/ratings/{ratingId}")
     public ResponseEntity<ApiResponse<RatingResponse>> update(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
@@ -44,6 +47,7 @@ public class RatingController {
         return ResponseEntity.ok(ApiResponse.ok("평점을 수정했습니다.", response));
     }
 
+    @Override
     @DeleteMapping("/ratings/{ratingId}")
     public ResponseEntity<ApiResponse<Void>> delete(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,

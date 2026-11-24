@@ -11,20 +11,23 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/members")
-public class MemberController {
+public class MemberController implements MemberControllerDoc {
 
     private final MemberService memberService;
 
+    @Override
     @GetMapping("/nickname/{nickname}")
     public NicknameCheckResponse checkNickname(@PathVariable String nickname) {
         return memberService.checkNickname(nickname);
     }
 
+    @Override
     @GetMapping("/email/{email}")
     public EmailCheckResponse checkEmail(@PathVariable String email) {
         return memberService.checkEmail(email);
     }
 
+    @Override
     @PostMapping
     public ResponseEntity<ApiResponse<MemberResponse>> signUp(
             @Valid @RequestBody SignUpRequest request
@@ -34,6 +37,7 @@ public class MemberController {
                 .body(ApiResponse.created("회원가입에 성공했습니다.", response));
     }
 
+    @Override
     @GetMapping("/me")
     public ResponseEntity<ApiResponse<MemberInfoResponse>> getMyInfo(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId
@@ -42,6 +46,7 @@ public class MemberController {
         return ResponseEntity.ok(ApiResponse.ok("회원 정보를 조회했습니다.", response));
     }
 
+    @Override
     @PatchMapping("/me")
     public ResponseEntity<ApiResponse<MemberInfoResponse>> updateMyInfo(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
