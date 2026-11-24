@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: umcine_be
+  jpa:
+    open-in-view: false
+
+jwt:
+  secret: ${JWT_SECRET}
+  access-expiration: ${JWT_ACCESS_EXPIRATION}
