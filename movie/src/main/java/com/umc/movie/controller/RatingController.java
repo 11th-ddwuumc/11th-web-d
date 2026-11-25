@@ -1,11 +1,15 @@
 package com.umc.movie.controller;
 
+import com.umc.movie.config.SwaggerConfig;
 import com.umc.movie.dto.ApiResponse;
 import com.umc.movie.dto.CreateRatingRequest;
 import com.umc.movie.dto.RatingResponse;
 import com.umc.movie.dto.UpdateRatingRequest;
 import com.umc.movie.interceptor.AuthInterceptor;
 import com.umc.movie.service.RatingService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -15,17 +19,25 @@ import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
+@Tag(name = "평점", description = "영화 평점 등록/조회/수정/삭제 API")
 public class RatingController {
 
     private final RatingService ratingService;
 
-    // 5주차에 만든 유저별 평점 조회입니다. 공개 API라 토큰을 받지 않습니다.
+    @Operation(
+            summary = "유저별 평점 조회",
+            description = "특정 회원이 남긴 평점 목록을 최신 순으로 조회합니다. 토큰이 없어도 호출할 수 있는 공개 API입니다. 없는 회원이면 404(MEMBER404_1)를 응답합니다."
+    )
     @GetMapping("/members/{memberId}/ratings")
     public List<RatingResponse> getMemberRatings(@PathVariable Long memberId) {
         return ratingService.getRatingsByMember(memberId);
     }
 
-    // 경로에서 /members/{memberId}가 사라지고 memberId는 인터셉터가 담아둔 값을 씁니다
+    @Operation(
+            summary = "평점 등록",
+            description = "토큰의 주인인 회원이 영화에 평점을 남깁니다. 토큰이 필요합니다. 토큰이 없으면 401(AUTH401_2), 이미 평점을 남긴 영화면 409(RATING409_1)를 응답합니다."
+    )
+    @SecurityRequirement(name = SwaggerConfig.BEARER_AUTH)
     @PostMapping("/ratings")
     public ResponseEntity<ApiResponse<RatingResponse>> create(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
@@ -36,7 +48,11 @@ public class RatingController {
                 .body(ApiResponse.created("평점을 등록했습니다.", response));
     }
 
-    // 경로에서도 /{memberId}가 사라지고 인터셉터가 담아둔 값을 씁니다
+    @Operation(
+            summary = "평점 수정",
+            description = "내가 남긴 평점의 점수와 후기를 수정합니다. 토큰이 필요합니다. 없는 평점이면 404(RATING404_1), 다른 회원의 평점이면 403(RATING403_1)을 응답합니다."
+    )
+    @SecurityRequirement(name = SwaggerConfig.BEARER_AUTH)
     @PatchMapping("/ratings/{ratingId}")
     public ResponseEntity<ApiResponse<RatingResponse>> update(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
@@ -47,6 +63,11 @@ public class RatingController {
         return ResponseEntity.ok(ApiResponse.ok("평점을 수정했습니다.", response));
     }
 
+    @Operation(
+            summary = "평점 삭제",
+            description = "내가 남긴 평점을 삭제하고 200과 result: null을 응답합니다. 토큰이 필요합니다. 없는 평점이면 404(RATING404_1), 다른 회원의 평점이면 403(RATING403_1)을 응답합니다."
+    )
+    @SecurityRequirement(name = SwaggerConfig.BEARER_AUTH)
     @DeleteMapping("/ratings/{ratingId}")
     public ResponseEntity<ApiResponse<Void>> delete(
             @RequestAttribute(AuthInterceptor.MEMBER_ID) Long memberId,
