@@ -1,3 +1,5 @@
+"use client";
+
 import { useState, type FormEvent } from "react";
 import FormField from "./form-field";
 import { useLoginMutation } from "../../hooks/use-login-mutation";

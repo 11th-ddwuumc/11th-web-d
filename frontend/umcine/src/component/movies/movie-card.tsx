@@ -1,4 +1,7 @@
-import { Link } from "@tanstack/react-router";
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
 import { cn } from "../../utils/cn";
 import { useIsFavorite, useToggleFavorite } from "../../hooks/use-favorites";
 import type { TmdbMovieListItem } from "../../api/movies/models";
@@ -11,10 +14,12 @@ export default function MovieCard({ movie }: { movie: TmdbMovieListItem }) {
     return (
         <div className="w-[150px]">
             <div className="relative w-full aspect-[4/5] overflow-hidden rounded-lg">
-                <Link to="/movies/$movieId" params={{ movieId: String(movie.id) }}>
-                    <img className="w-full h-full object-cover"
+                <Link href={`/movies/${movie.id}`}>
+                    <Image className="object-cover"
                         src={getTmdbPosterUrl(movie.poster_path) ?? "/images/no-poster.png"}
-                        alt={movie.title} />
+                        alt={movie.title}
+                        fill
+                        sizes="150px" />
                 </Link>
                 
                 <button
@@ -26,7 +31,7 @@ export default function MovieCard({ movie }: { movie: TmdbMovieListItem }) {
                     disabled={isPending}
                     onClick={() => toggleFavorite(movie.id, isBookmarked)}
                 >
-                    <img
+                    <Image width={24} height={24}
                         className="w-full h-full object-contain p-[2px]"
                         src={isBookmarked ? "/icons/movie-icons/bookmark.svg" : "/icons/movie-icons/bookmark-outline.svg"}
                         alt={isBookmarked ? "북마크 해제" : "북마크"}

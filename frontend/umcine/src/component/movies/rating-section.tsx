@@ -1,5 +1,8 @@
+"use client";
+
+import Image from "next/image";
 import { useState } from "react";
-import { Link } from "@tanstack/react-router";
+import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { useAuthStore } from "../../stores/auth-store";
 import { useMeQuery } from "../../hooks/use-me-query";
@@ -34,7 +37,7 @@ export default function RatingSection({ movieId }: { movieId: number }) {
         {header}
         <p className="text-sm text-gray-500">
           평점을 남기려면{" "}
-          <Link to="/login" className="font-bold text-blue-600 hover:text-blue-300">
+          <Link href="/login" className="font-bold text-blue-600 hover:text-blue-300">
             로그인
           </Link>
           이 필요해요.
@@ -142,7 +145,7 @@ function RatingForm({
             onMouseLeave={() => setHoverRating(0)}
             className="hover:cursor-pointer"
           >
-            <img
+            <Image width={24} height={24}
               src={
                 star <= (hoverRating || rating)
                   ? "/icons/movie-icons/star.svg"

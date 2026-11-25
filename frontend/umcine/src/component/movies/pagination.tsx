@@ -1,3 +1,6 @@
+"use client";
+
+import Image from "next/image";
 import { cn } from "../../utils/cn";
 
 const PAGE_GROUP_SIZE = 5;
@@ -28,7 +31,7 @@ export default function Pagination({ page, totalPages, onPageChange }: Paginatio
                 disabled={page <= 1}
                 onClick={() => onPageChange(page - 1)}
             >
-                <img className="w-5 h-5" src="/icons/movie-icons/chevron-left.svg" alt="" />
+                <Image width={24} height={24} className="w-5 h-5" src="/icons/movie-icons/chevron-left.svg" alt="" />
             </button>
 
             {pages.map((pageNumber) => (
@@ -55,7 +58,7 @@ export default function Pagination({ page, totalPages, onPageChange }: Paginatio
                 disabled={page >= totalPages}
                 onClick={() => onPageChange(page + 1)}
             >
-                <img className="w-5 h-5" src="/icons/movie-icons/chevron-right.svg" alt="" />
+                <Image width={24} height={24} className="w-5 h-5" src="/icons/movie-icons/chevron-right.svg" alt="" />
             </button>
         </nav>
     );

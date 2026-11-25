@@ -1,4 +1,3 @@
-import { env } from "../../config/env";
 import type { TmdbMovieListResponse } from "./models";
 
 type GetMoviesWithFetchResponse = TmdbMovieListResponse;
@@ -11,14 +10,8 @@ async function getMoviesWithFetch(
     page: String(page),
   });
 
-  const response = await fetch(
-    `${env.tmdbApiBaseUrl}/movie/popular?${searchParams}`,
-    {
-      headers: {
-        Authorization: `Bearer ${env.tmdbAccessToken}`,
-      },
-    },
-  );
+  // 토큰은 서버(/api/tmdb)가 붙여줘요.
+  const response = await fetch(`/api/tmdb/movie/popular?${searchParams}`);
 
   if (!response.ok) {
     throw new Error(`영화 목록 요청에 실패했어요: ${response.status}`);

@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useNavigate } from "@tanstack/react-router";
+import { useRouter } from "next/navigation";
 import { HTTPError } from "ky";
 import { favoriteQueries } from "../api/movies/favorites/favorite-queries";
 import { postFavorite } from "../api/movies/favorites/post-favorites";
@@ -49,7 +49,7 @@ async function getErrorMessage(error: unknown, fallback: string) {
 // 즐겨찾기 추가/해제. 로그인하지 않았다면 로그인 페이지로 보내요.
 export function useToggleFavorite() {
   const queryClient = useQueryClient();
-  const navigate = useNavigate();
+  const router = useRouter();
   const accessToken = useAuthStore((state) => state.accessToken);
 
   const mutation = useMutation({
@@ -74,7 +74,7 @@ export function useToggleFavorite() {
   function toggleFavorite(movieId: number, isFavorite: boolean) {
     if (!accessToken) {
       alert("즐겨찾기는 로그인 후 이용할 수 있어요.");
-      navigate({ to: "/login" });
+      router.push("/login");
       return;
     }
     if (mutation.isPending) return;

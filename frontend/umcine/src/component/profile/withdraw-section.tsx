@@ -1,3 +1,5 @@
+"use client";
+
 export default function WithdrawSection() {
   const handleWithdraw = () => {
     if (!confirm("정말 탈퇴하시겠어요? 이 작업은 되돌릴 수 없어요.")) return;

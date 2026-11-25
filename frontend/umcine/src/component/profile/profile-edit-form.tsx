@@ -1,3 +1,6 @@
+"use client";
+
+import Image from "next/image";
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { checkNickname } from "../../api/auth/check-nickname";
@@ -93,19 +96,23 @@ export default function ProfileEditForm() {
             aria-label="프로필 이미지 변경"
           >
             {imagePreview ? (
-              <img
+              // 선택한 파일의 미리보기(blob/data URL)라서 최적화 없이 그대로 보여줘요.
+              <Image
                 src={imagePreview}
                 alt="프로필 이미지"
+                width={96}
+                height={96}
+                unoptimized
                 className="w-full h-full rounded-full object-cover"
               />
             ) : (
-              <img
+              <Image width={24} height={24}
                 src="/icons/movie-icons/person.svg"
                 alt=""
                 className="w-8 h-8"
               />
             )}
-            <img
+            <Image width={24} height={24}
               src="/icons/movie-icons/edit.svg"
               alt=""
               className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-white"

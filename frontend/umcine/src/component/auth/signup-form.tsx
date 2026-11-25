@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import FormField from "./form-field";
 import { checkEmail } from "../../api/auth/check-email";
