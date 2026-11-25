@@ -1,0 +1,45 @@
+"use client";
+
+import Image from "next/image";
+import Link from "next/link";
+import { cn } from "../../utils/cn";
+import { useIsFavorite, useToggleFavorite } from "../../hooks/use-favorites";
+import type { TmdbMovieListItem } from "../../api/movies/models";
+import { getTmdbPosterUrl } from "../../utils/movies/tmdb-image";
+
+export default function MovieCard({ movie }: { movie: TmdbMovieListItem }) {
+    const isBookmarked = useIsFavorite(movie.id);
+    const { toggleFavorite, isPending } = useToggleFavorite();
+
+    return (
+        <div className="w-[150px]">
+            <div className="relative w-full aspect-[4/5] overflow-hidden rounded-lg">
+                <Link href={`/movies/${movie.id}`}>
+                    <Image className="object-cover"
+                        src={getTmdbPosterUrl(movie.poster_path) ?? "/images/no-poster.png"}
+                        alt={movie.title}
+                        fill
+                        sizes="150px" />
+                </Link>
+                
+                <button
+                    className={cn(
+                        "absolute right-2 top-2 w-[15%] aspect-square rounded-lg border-2",
+                        isBookmarked ? "bg-blue-500 border-blue-500 hover:bg-blue-600 hover:border-blue-600" 
+                            : "bg-gray-800 border-white  hover:bg-blue-200 hover:border-blue-200",
+                    )}
+                    disabled={isPending}
+                    onClick={() => toggleFavorite(movie.id, isBookmarked)}
+                >
+                    <Image width={24} height={24}
+                        className="w-full h-full object-contain p-[2px]"
+                        src={isBookmarked ? "/icons/movie-icons/bookmark.svg" : "/icons/movie-icons/bookmark-outline.svg"}
+                        alt={isBookmarked ? "북마크 해제" : "북마크"}
+                    />
+                </button>
+            </div>
+            <h3 className="text-base text-sm font-bold mt-1 truncate">{movie.title}</h3>
+            <p className="text-xs text-gray-500">{movie.release_date}</p>
+        </div>
+    );
+}
